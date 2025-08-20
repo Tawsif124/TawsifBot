@@ -12,31 +12,24 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
-            
-            /* এখানে তোর ছবির URL দিতে হবে */
-            /* তোর kola.jpg ছবিটা অনলাইনে আপলোড করে সেই লিংকটা এখানে বসিয়ে দে */
+            /* তোর ছবির URL দিতে হবে */
             background-image: url('kola.jpg');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
             transition: background-image 0.5s ease; /* ব্যাকগ্রাউন্ড পরিবর্তনের জন্য ট্রানজিশন */
+            height: 100vh; /* পুরো স্ক্রিন দখল করার জন্য */
+            width: 100vw;
+            overflow: hidden; /* যাতে বাইরে কোনো স্ক্রল না আসে */
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        
+
         /* ব্যাকগ্রাউন্ডের উপর হালকা একটা ওভারলে যোগ করা হয়েছে */
         .bg-overlay {
             background-color: rgba(0, 0, 0, 0.4);
-        }
-
-        /* মেনু মিনিমাইজ হলে স্টাইল পরিবর্তন */
-        /* এই ক্লাসটা জাভাস্ক্রিপ্ট দিয়ে toggled হবে */
-        .menu-minimized #sidebar-menu {
-            min-width: 4rem; /* ছোট মেনুর জন্য একটি নির্দিষ্ট প্রস্থ */
-            width: 4rem;
-        }
-        .menu-minimized #chat-box {
-            min-width: calc(100% - 4rem);
-            width: calc(100% - 4rem);
         }
 
         /* Tawsif Chatbot লেখাটার জন্য টাইপরাইটার অ্যানিমেশন */
@@ -74,59 +67,58 @@
         /* স্টাইল অপশন মেনু */
         #style-options {
             position: absolute;
-            /* নতুন: চ্যাটবক্সের নিচে থাকবে যাতে অন্য কন্টেন্ট ব্লক না করে */
             top: 60px;
             right: 0;
             transform: translateX(0);
             z-index: 10;
         }
+        
+        /* রেসপন্সিভ চ্যাটবক্সের জন্য নতুন স্টাইল */
+        .chat-container {
+            width: 100vw;
+            height: 100vh;
+            /* মাঝারি স্ক্রিনে চ্যাটবক্সের প্রস্থ সীমিত করা হয়েছে */
+            max-width: 100%;
+            /* ছোট স্ক্রিনে রাউন্ডেড কর্নার সরানো হয়েছে */
+            border-radius: 0;
+            /* বড় স্ক্রিনের জন্য প্রস্থ এবং রাউন্ডেড কর্নার যোগ করা হয়েছে */
+            @media (min-width: 768px) {
+                max-width: 500px;
+                max-height: 700px;
+                border-radius: 2rem;
+            }
+            @media (min-width: 1024px) {
+                 max-width: 600px;
+                 max-height: 800px;
+            }
+        }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen">
-    <!-- নতুন: চ্যাটবক্স এবং সাইডবারের জন্য মূল কন্টেইনার -->
-    <div id="main-container" class="flex flex-col md:flex-row items-center justify-center gap-6 w-11/12 max-w-6xl transition-all duration-300">
-        <!-- নতুন: সাইডবার কন্টেইনার -->
-        <div id="sidebar-menu" class="bg-white bg-opacity-90 backdrop-filter backdrop-blur-sm shadow-xl rounded-2xl w-full md:w-1/4 p-6 flex flex-col items-center space-y-4 h-[80vh] md:h-[60vh] transition-all duration-300">
-            <!-- মেনু টগল বাটন -->
-            <button id="menu-toggle-btn" class="self-end p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+<body class="bg-overlay">
+    <!-- চ্যাটবক্স এবং সাইডবারের জন্য মূল কন্টেইনার -->
+    <div id="main-container" class="flex items-center justify-center transition-all duration-300 w-full h-full">
+        
+        <!-- চ্যাটবক্সটি সব স্ক্রিনে মাঝখানে থাকবে এবং প্রস্থে মানিয়ে নেবে -->
+        <div id="chat-box" class="chat-container relative bg-white bg-opacity-90 backdrop-filter backdrop-blur-sm shadow-xl flex flex-col transition-all duration-300">
+             <!-- মেনু টগল বাটন চ্যাটবক্সের ভেতরেই থাকবে -->
+            <button id="menu-toggle-btn" class="absolute top-4 left-4 p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 z-10">
                 <svg id="menu-arrow-icon" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
             </button>
-            <div id="menu-content" class="w-full flex flex-col items-center space-y-4 transition-opacity duration-300">
-                <h2 class="text-xl font-bold text-gray-800 border-b-2 border-indigo-600 pb-2 mb-2">মেনু</h2>
-                <!-- নতুন: বাটনগুলোতে অ্যানিমেশন ক্লাস যোগ করা হয়েছে -->
-                <button class="w-full py-4 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-full animated-btn">
-                    <span class="text-2xl">🎵</span> গান
-                </button>
-                <button class="w-full py-4 px-6 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-full animated-btn">
-                    <span class="text-2xl">🎮</span> গেম
-                </button>
-                <button class="w-full py-4 px-6 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-full animated-btn">
-                    <span class="text-2xl">📖</span> পড়া
-                </button>
-                 <!-- নতুন: About বাটন -->
-                <button id="about-btn" class="w-full py-4 px-6 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-full animated-btn">
-                    <span class="text-2xl">ℹ️</span> About
-                </button>
-                <!-- স্টাইল বাটন এখন উপরে, তাই এখান থেকে সরিয়ে দেওয়া হয়েছে -->
-            </div>
-        </div>
-
-        <!-- চ্যাটবক্সটি সব স্ক্রিনে মাঝখানে থাকবে এবং প্রস্থে মানিয়ে নেবে -->
-        <div id="chat-box" class="relative bg-white bg-opacity-90 backdrop-filter backdrop-blur-sm shadow-xl rounded-2xl w-full md:w-3/4 p-6 flex flex-col h-[80vh] transition-all duration-300">
+            
             <!-- চ্যাট হেডার এবং ভাষা নির্বাচন -->
-            <!-- নতুন: এই div-এর মধ্যে স্টাইল বাটন যোগ করা হয়েছে -->
-            <div class="border-b border-gray-200 pb-4 mb-4 flex justify-between items-center">
+            <div class="border-b border-gray-200 pb-4 mb-4 flex justify-center items-center relative px-10 pt-4">
                 <!-- Tawsif Chatbot লেখার জন্য অ্যানিমেশন যোগ করা হয়েছে -->
                 <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
                     <span id="chat-title" class="typewriter-text"></span>
-                    <!-- নতুন: স্টাইল বাটন এখানে যোগ করা হয়েছে -->
+                    <!-- স্টাইল বাটন এখানে যোগ করা হয়েছে -->
                     <button id="style-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-semibold py-1 px-2 rounded-full animated-btn">
                         স্টাইল
                     </button>
                 </h1>
-                <select id="language-select" class="rounded-full border border-gray-300 px-4 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <!-- ভাষা নির্বাচন ডানদিকে সরিয়ে দেওয়া হয়েছে -->
+                <select id="language-select" class="absolute right-4 rounded-full border border-gray-300 px-4 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <option value="bn-BD">বাংলা</option>
                     <option value="en-US">English</option>
                     <option value="hi-IN">हिन्दी</option>
@@ -135,7 +127,7 @@
             </div>
 
             <!-- চ্যাটের মেসেজ ডিসপ্লে এরিয়া -->
-            <div id="chat-messages" class="flex-grow overflow-y-auto space-y-4 pr-2">
+            <div id="chat-messages" class="flex-grow overflow-y-auto space-y-4 pr-2 pl-4 md:pl-8">
                 <!-- প্রাথমিক মেসেজ -->
                 <div class="flex items-start gap-2.5">
                     <div class="flex flex-col w-full max-w-[320px] leading-1.5 p-4 border-gray-200 bg-gray-100 rounded-e-xl rounded-es-xl">
@@ -154,7 +146,7 @@
             </div>
 
             <!-- ইনপুট ফর্ম -->
-            <div class="mt-4">
+            <div class="mt-4 px-4 pb-4">
                 <form id="chat-form" class="flex gap-2">
                     <!-- ইনপুট বক্সটি সব স্ক্রিনে সম্পূর্ণ প্রস্থ নেবে -->
                     <input
@@ -205,6 +197,28 @@
                 </div>
             </div>
         </div>
+
+        <!-- সাইডবার মেনু -->
+        <div id="sidebar-menu" class="fixed top-0 left-0 h-full w-64 bg-white bg-opacity-90 backdrop-filter backdrop-blur-sm shadow-xl p-6 flex flex-col items-center space-y-4 transition-transform duration-300 transform -translate-x-full z-20">
+            <button id="close-menu-btn" class="self-end p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <svg class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h2 class="text-xl font-bold text-gray-800 border-b-2 border-indigo-600 pb-2 mb-2">মেনু</h2>
+            <button class="w-full py-4 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-full animated-btn">
+                <span class="text-2xl">🎵</span> গান
+            </button>
+            <button class="w-full py-4 px-6 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-full animated-btn">
+                <span class="text-2xl">🎮</span> গেম
+            </button>
+            <button class="w-full py-4 px-6 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-full animated-btn">
+                <span class="text-2xl">📖</span> পড়া
+            </button>
+            <button id="about-btn" class="w-full py-4 px-6 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-full animated-btn">
+                <span class="text-2xl">ℹ️</span> About
+            </button>
+        </div>
     </div>
 
     <script>
@@ -216,9 +230,8 @@
         const voiceInputBtn = document.getElementById('voice-input-btn');
         const languageSelect = document.getElementById('language-select');
         const menuToggleBtn = document.getElementById('menu-toggle-btn');
-        const mainContainer = document.getElementById('main-container');
-        const menuContent = document.getElementById('menu-content');
-        const menuArrowIcon = document.getElementById('menu-arrow-icon');
+        const sidebarMenu = document.getElementById('sidebar-menu');
+        const closeMenuBtn = document.getElementById('close-menu-btn');
         const chatTitle = document.getElementById('chat-title');
         const aboutBtn = document.getElementById('about-btn');
 
@@ -227,7 +240,6 @@
         const styleOptionsContainer = document.getElementById('style-options');
         const textColorToggle = document.getElementById('text-color-toggle');
         const bgColorToggle = document.getElementById('bg-color-toggle');
-        const chatBox = document.getElementById('chat-box');
         const body = document.body;
 
         let wasVoiceInput = false; // নতুন ভেরিয়েবল যোগ করা হয়েছে
@@ -295,19 +307,10 @@
 
         // মেনু টগল ফাংশন
         menuToggleBtn.addEventListener('click', () => {
-            // main-container-এ 'menu-minimized' ক্লাসটি toggled হবে
-            mainContainer.classList.toggle('menu-minimized');
-            
-            // মেনুর ভেতরের কন্টেন্ট (বাটনগুলো) লুকিয়ে রাখা বা দেখানো
-            const isMinimized = mainContainer.classList.contains('menu-minimized');
-            menuContent.classList.toggle('hidden', isMinimized);
-
-            // অ্যারোর দিক পরিবর্তন
-            if (isMinimized) {
-                menuArrowIcon.setAttribute('d', "M9 5l7 7-7 7"); // ডানমুখী অ্যারো
-            } else {
-                menuArrowIcon.setAttribute('d', "M15 19l-7-7 7-7"); // বামমুখী অ্যারো
-            }
+            sidebarMenu.classList.remove('-translate-x-full');
+        });
+        closeMenuBtn.addEventListener('click', () => {
+            sidebarMenu.classList.add('-translate-x-full');
         });
 
         // চ্যাট হিস্টরি
@@ -522,74 +525,37 @@
                 window.speechSynthesis.speak(utterance);
             }
         }
-
+        
         // এআই থেকে উত্তর পাওয়ার জন্য API কল করার ফাংশন
         async function getGeminiResponse(userPrompt) {
-            // নতুন: এখানে হার্ডকোড করা তথ্যের জন্য চেক করা হচ্ছে
             const lowerPrompt = userPrompt.toLowerCase();
             
-            // নতুন শর্ত: যদি 'Tawsif' বা 'TAWSIF' শব্দটি থাকে
-            if (lowerPrompt.includes('tawsif')) {
-                const htmlResponse = `
-                    <div class="bg-indigo-100 text-indigo-800 p-4 rounded-xl shadow-md border border-indigo-200">
-                        <p class="text-sm font-semibold mb-2">এই চ্যাটবটটা <span class="font-bold text-purple-700">Tawsif</span> নিজে হাতে তৈরি করেছে, Google Gemini API ব্যবহার করে! ✨</p>
-                        <p class="text-sm">ও একজন <span class="font-bold text-green-700">খুব ভালো ছেলে</span> এবং <span class="font-bold text-blue-700">প্রোগ্রামিং</span> করতে খুব ভালোবাসে।</p>
-                        <ul class="text-sm mt-3 list-disc list-inside">
-                            <li>আব্বুর নাম: <span class="font-semibold text-gray-700">তাফাজ্জল খান</span></li>
-                            <li>আম্মুর নাম: <span class="font-semibold text-gray-700">নিগার সুলতানা</span></li>
-                            <li>বোনের নাম: <span class="font-semibold text-gray-700">ত্রিশা</span></li>
-                        </ul>
-                    </div>
-                `;
-                return { type: 'html', data: htmlResponse };
-            }
-            // তোর নাম যখন জিজ্ঞেস করবে
-            if (lowerPrompt.includes('কে বানিয়েছে') || lowerPrompt.includes('কে তৈরি করেছে') || lowerPrompt.includes('কে তৈরি করছিস') || lowerPrompt.includes('তোর নির্মাতা কে')) {
-                return { type: 'text', data: 'আমাকে **Tawsif** বানিয়েছে। 😄' };
-            }
-            // তোর পড়াশোনার ব্যাপারে জিজ্ঞেস করলে
-            if (lowerPrompt.includes('hsc') || lowerPrompt.includes('কি পড়িস') || lowerPrompt.includes('পড়াশোনা') || lowerPrompt.includes('তোমার সমপর্কে') || lowerPrompt.includes('কোন ক্লাসে পড়িস')) {
-                return { type: 'text', data: 'আমি এখন **HSC**-তে পড়ি।' };
-            }
-            // তোর পরিবারের ব্যাপারে জিজ্ঞেস করলে
-            if (lowerPrompt.includes('আব্বু') || lowerPrompt.includes('আম্মু') || lowerPrompt.includes('বাবা') || lowerPrompt.includes('মা') || lowerPrompt.includes('বোন') || lowerPrompt.includes('sister') || lowerPrompt.includes('mother') || lowerPrompt.includes('father') || lowerPrompt.includes('পারিবার')) {
-                return { type: 'text', data: 'আমার আব্বুর নাম **তাফাজ্জল খান**, আম্মুর নাম **নিগার সুলতানা** আর বোনের নাম **ত্রিশা**।' };
-            }
-
-
+            // creatorKeywords-এর সাথে tawsif-এর বিভিন্ন বানান ও শব্দ যোগ করা হয়েছে
+            const creatorKeywords = ['tawsif', 'তাওসিফ', 'tawsifa', 'tausif', 'towsif', 'তোসিফ', 'তৌসিফ', 'কে বানিয়েছে', 'কে তৈরি করেছে', 'কে তৈরি করছিস', 'তোর নির্মাতা কে', 'who made you', 'who created you', 'তোমার সম্পর্কে'];
+            
             let payload;
             const selectedLanguage = languageSelect.value;
-            
-            // ব্যবহারকারীর ইনপুট থেকে সংখ্যা বের করার চেষ্টা
-            const numberMatch = userPrompt.match(/\d+/);
-            let numberOfQuestions = numberMatch ? parseInt(numberMatch[0], 10) : 5; // ডিফল্ট ৫টা প্রশ্ন
-            if (numberOfQuestions > 20) {
-                numberOfQuestions = 20; // সর্বোচ্চ ২০টা
-            }
 
-            // যদি ব্যবহারকারী কুইজ চায়
-            if (userPrompt.toLowerCase().includes('mcq') || userPrompt.toLowerCase().includes('কুইজ') || userPrompt.toLowerCase().includes('প্রশ্ন') || userPrompt.toLowerCase().includes('quiz') || userPrompt.toLowerCase().includes('question')) {
-                // JSON schema সহ payload তৈরি করা
+            // যদি কোনো কীওয়ার্ড মেলে, তাহলে Gemini API থেকে তৌসিফ সম্পর্কে dynamic উত্তর চাওয়া হবে
+            if (creatorKeywords.some(keyword => lowerPrompt.includes(keyword))) {
+                 let tawsifPrompt;
+                 if (selectedLanguage === 'bn-BD') {
+                    tawsifPrompt = `"${userPrompt}"। তুই একজন চ্যাটবট, যাকে **তৌসিফ** তৈরি করেছে। তোর নির্মাতা **তৌসিফ** সম্পর্কে প্রশ্নের উত্তর দে। তোর উত্তরটা হবে বন্ধুত্বপূর্ণ, ইমোজি ব্যবহার করে এবং ছোট ছোট প্যারাগ্রাফে। তোর উত্তরে অবশ্যই **তৌসিফ** নামটি থাকবে।`;
+                } else if (selectedLanguage === 'en-US') {
+                    tawsifPrompt = `"${userPrompt}". You are a chatbot created by **Tawsif**. Answer the question about your creator **Tawsif**. Your response should be friendly, use emojis, and be in short paragraphs. Make sure to include the name **Tawsif** in your response.`;
+                } else if (selectedLanguage === 'hi-IN') {
+                    tawsifPrompt = `"${userPrompt}"। आप **तौसीफ** द्वारा बनाए गए एक चैटबॉट हैं। अपने निर्माता **तौसीफ** के बारे में पूछे गए सवाल का जवाब दें। आपका जवाब दोस्ताना होना चाहिए, इमोजी का उपयोग करके और छोटे पैराग्राफ में होना चाहिए। सुनिश्चित करें कि आपके जवाब में **तौसीफ** नाम शामिल हो।`;
+                } else if (selectedLanguage === 'es-ES') {
+                    tawsifPrompt = `"${userPrompt}". Eres un chatbot creado por **Tawsif**. Responde a la pregunta sobre tu creador **Tawsif**. Tu respuesta debe ser amigable, usar emojis y estar en párrafos cortos. Asegúrate de incluir el nombre **Tawsif** en tu respuesta.`;
+                }
+                
                 payload = {
                     contents: [{
                         role: "user",
-                        parts: [{ text: `"${userPrompt}"। এই বিষয়ের উপর নির্বাচিত ভাষায় ${numberOfQuestions}টি মাল্টিপল চয়েস প্রশ্ন (MCQ) তৈরি করে দাও। উত্তরগুলো একটি JSON অ্যারের ফরম্যাটে দিও যেখানে প্রতিটি অবজেক্টের মধ্যে "question", "options" (একটি স্ট্রিং অ্যারে), এবং "correctAnswer" (সঠিক উত্তরের স্ট্রিং) থাকবে।` }]
-                    }],
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "ARRAY",
-                            items: {
-                                type: "OBJECT",
-                                properties: {
-                                    "question": { "type": "STRING" },
-                                    "options": { "type": "ARRAY", "items": { "type": "STRING" } },
-                                    "correctAnswer": { "type": "STRING" }
-                                }
-                            }
-                        }
-                    }
+                        parts: [{ text: tawsifPrompt }]
+                    }]
                 };
+
             } else {
                 // সাধারণ চ্যাটবট উত্তরের জন্য payload
                 // এখানে ভাষা আর ফরম্যাট নির্দিষ্ট করে দেওয়া হয়েছে
@@ -632,19 +598,6 @@
                 if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
                     const responseText = result.candidates[0].content.parts[0].text;
                     
-                    // JSON ফরম্যাটের জন্য চেষ্টা করা
-                    if (userPrompt.toLowerCase().includes('mcq') || userPrompt.toLowerCase().includes('কুইজ') || userPrompt.toLowerCase().includes('প্রশ্ন') || userPrompt.toLowerCase().includes('quiz') || userPrompt.toLowerCase().includes('question')) {
-                        try {
-                            const quizzesData = JSON.parse(responseText);
-                            if (Array.isArray(quizzesData)) {
-                                return { type: 'quiz', data: quizzesData };
-                            }
-                        } catch (e) {
-                            console.error("Failed to parse JSON for quiz:", e);
-                            return { type: 'text', data: "দুঃখিত, কুইজ তৈরি করতে পারলাম না। অন্য কোনো প্রশ্ন করে দেখতে পারিস।" };
-                        }
-                    }
-                    
                     // সাধারণ টেক্সট উত্তরের জন্য
                     return { type: 'text', data: responseText };
                 } else {
@@ -675,9 +628,7 @@
             const botResponse = await getGeminiResponse(userText);
             
             // উত্তরের ধরন অনুযায়ী ডিসপ্লে করা
-            if (botResponse.type === 'quiz') {
-                displayQuizzes(botResponse.data);
-            } else if (botResponse.type === 'html') {
+            if (botResponse.type === 'html') {
                 displayHtmlMessage(botResponse.data, 'bot');
             } else {
                 // নতুন: টাইপরাইটার এফেক্ট দিয়ে মেসেজ ডিসপ্লে করা
