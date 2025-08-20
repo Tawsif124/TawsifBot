@@ -314,10 +314,12 @@
         });
 
         // চ্যাট হিস্টরি
+        // এখন chatHistory-তে পুরো কনভারসেশন থাকবে
         const chatHistory = [{
-            role: "user",
-            parts: [{ text: "হাই! তুই কে?" }]
+            role: "model", // মডেলের প্রাথমিক মেসেজ
+            parts: [{ text: "I am From Tawsif Chatbot How can I help you today" }]
         }];
+        
 
         // API key এখানে বসাতে হবে
         const apiKey = "AIzaSyBr5pug_OpHcoVccs0e6_tZB7GQPNVBf-E"; // Canvas এনভায়রনমেন্টে স্বয়ংক্রিয়ভাবে এই API কী যোগ হয়ে যাবে
@@ -549,11 +551,12 @@
                     tawsifPrompt = `"${userPrompt}". Eres un chatbot creado por **Tawsif**. Responde a la pregunta sobre tu creador **Tawsif**. Tu respuesta debe ser amigable, usar emojis y estar en párrafos cortos. Asegúrate de incluir el nombre **Tawsif** en tu respuesta.`;
                 }
                 
+                // এখন শুধু সর্বশেষ প্রশ্নটা যোগ করা হবে, কারণ পুরো হিস্টরি পাঠানো হবে
+                chatHistory.push({ role: "user", parts: [{ text: tawsifPrompt }] });
+
                 payload = {
-                    contents: [{
-                        role: "user",
-                        parts: [{ text: tawsifPrompt }]
-                    }]
+                    // পুরো চ্যাট হিস্টরি পাঠানো হচ্ছে যাতে কনটেক্সট মনে থাকে
+                    contents: chatHistory
                 };
 
             } else {
@@ -561,7 +564,7 @@
                 // এখানে ভাষা আর ফরম্যাট নির্দিষ্ট করে দেওয়া হয়েছে
                 let prompt;
                 if (selectedLanguage === 'bn-BD') {
-                    prompt = `"${userPrompt}"। এই প্রশ্নের উত্তর তুই বাংলাতে দিবি, আমার মতো করে, ইমোজি ব্যবহার করে এবং ছোট ছোট প্যারাগ্রাফে ভাগ করে দিবি।`;
+                    prompt = `${userPrompt}"। এই প্রশ্নের উত্তর তুই বাংলাতে দিবি, আমার মতো করে, ইমোজি ব্যবহার করে এবং ছোট ছোট প্যারাগ্রাফে ভাগ করে দিবি।`;
                 } else if (selectedLanguage === 'en-US') {
                     prompt = `"${userPrompt}". Respond to this question in English in a friendly tone, using emojis and formatted in short paragraphs.`;
                 } else if (selectedLanguage === 'hi-IN') {
@@ -570,11 +573,12 @@
                     prompt = `"${userPrompt}". Responde a esta pregunta en español de forma amigable, usando emojis y con formato de párrafos cortos.`;
                 }
                 
+                // এখন শুধু সর্বশেষ প্রশ্নটা যোগ করা হবে
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+
                 payload = {
-                    contents: [{
-                        role: "user",
-                        parts: [{ text: prompt }]
-                    }]
+                    // পুরো চ্যাট হিস্টরি পাঠানো হচ্ছে যাতে কনটেক্সট মনে থাকে
+                    contents: chatHistory
                 };
             }
 
@@ -598,6 +602,9 @@
                 if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
                     const responseText = result.candidates[0].content.parts[0].text;
                     
+                    // মডেলের উত্তর হিস্টরিতে যোগ করা
+                    chatHistory.push({ role: "model", parts: [{ text: responseText }] });
+
                     // সাধারণ টেক্সট উত্তরের জন্য
                     return { type: 'text', data: responseText };
                 } else {
