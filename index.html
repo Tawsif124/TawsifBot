@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
+    <link rel="icon" href="logo.jpg" type="image/x-icon">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tawsif Chatbot</title>
+    <title>Study Chatbot</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Add Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
@@ -68,6 +72,8 @@
             height: 100vh;
             max-width: 100%;
             border-radius: 0;
+            display: flex;
+            flex-direction: column;
             @media (min-width: 768px) {
                 max-width: 500px;
                 max-height: 700px;
@@ -108,6 +114,48 @@
             font-size: 1.5rem;
             color: #aaa;
         }
+
+        /* Custom styles for Markdown-rendered content */
+        .markdown-content p {
+            margin-bottom: 1rem;
+        }
+        .markdown-content ul {
+            list-style-type: disc;
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .markdown-content ol {
+            list-style-type: decimal;
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .markdown-content li {
+            margin-bottom: 0.5rem;
+        }
+        .markdown-content strong {
+            font-weight: 700;
+        }
+        .markdown-content em {
+            font-style: italic;
+        }
+
+        /* New styles for the selection toolbar */
+        #selection-toolbar {
+            position: absolute;
+            background-color: #333;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 20;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            white-space: nowrap;
+        }
+        #selection-toolbar:hover {
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body class="bg-overlay">
@@ -135,7 +183,7 @@
             <div id="chat-messages" class="flex-grow overflow-y-auto space-y-4 pr-2 pl-4 md:pl-8">
                 <div class="flex items-start gap-2.5">
                     <div class="flex flex-col w-full max-w-[320px] leading-1.5 p-4 border-gray-200 bg-gray-100 rounded-e-xl rounded-es-xl">
-                        <p class="text-sm font-normal text-gray-900">আমি তাওসিফ চ্যাটবট, আমি কিভাবে তোমাকে সাহায্য করতে পারি?</p>
+                        <p class="text-sm font-normal text-gray-900">আমি স্টাডি চ্যাটবট, আমি কিভাবে তোমাকে সাহায্য করতে পারি?</p>
                     </div>
                 </div>
             </div>
@@ -161,8 +209,7 @@
                         class="bg-green-500 hover:bg-green-600 text-white p-2 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500"
                     >
                         <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd" d="M7 4a3 3 0 00-3 3v6a3 3 0 006 0V7a3 3 0 00-3-3zM3 7a5 5 0 0110 0v6a5 5 0 01-10 0V7zm4-4a1 1 0 011 1v1a1 1 0 11-2 0V4a1 1 0 011-1zm0 14a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1z" clip-rule="evenodd" />
-                        </svg>
+                            <path fill-rule="evenodd" d="M7 4a3 3 0 00-3 3v6a3 3 0 006 0V7a3 3 0 00-3-3zM3 7a5 5 0 0110 0v6a5 5 0 01-10 0V7zm4-4a1 1 0 011 1v1a1 1 0 11-2 0V4a1 1 0 011-1zm0 14a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                     </button>
                     <button
                         type="submit"
@@ -209,9 +256,18 @@
     <div id="about-modal" class="modal">
         <div class="modal-content">
             <span id="close-modal-btn" class="close-btn">&times;</span>
-            <h2 class="text-2xl font-bold mb-4">About Tawsif Chatbot</h2>
+            <h2 class="text-2xl font-bold mb-4">About Study Chatbot</h2>
             <p>This is a simple chatbot created by Tawsif. It uses the Gemini API to provide conversational responses and includes features like voice input and custom styles.</p>
         </div>
+    </div>
+    <!-- New selection toolbar for reply feature -->
+    <div id="selection-toolbar" class="hidden">
+        <button id="ask-chatbot-btn" class="flex items-center gap-2 p-2 text-sm font-medium rounded-md hover:bg-gray-700 transition-colors">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.971-4.029 9-9 9s-9-4.029-9-9 4.029-9 9-9 9 4.029 9 9z" />
+            </svg>
+            Ask Chatbot
+        </button>
     </div>
 
     <script>
@@ -235,17 +291,15 @@
         const picAnalyserBtn = document.getElementById('pic-analyser-btn');
         const body = document.body;
         
+        // New elements for the selection feature
+        const selectionToolbar = document.getElementById('selection-toolbar');
+        const askChatbotBtn = document.getElementById('ask-chatbot-btn');
+        
         const textColors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6'];
         let isTextColored = false;
         let isBackgroundStyled = false;
 
-        chatTitle.textContent = 'Tawsif Chatbot 💬';
-
-        // 'About' button removed from HTML, so this listener is no longer needed
-        // and was causing the error.
-        // aboutBtn.addEventListener('click', () => {
-        //     aboutModal.style.display = 'flex';
-        // });
+        chatTitle.textContent = 'Study Chatbot 💬';
 
         closeModalBtn.addEventListener('click', () => {
             aboutModal.style.display = 'none';
@@ -287,7 +341,7 @@
                 bgColorToggle.classList.add('bg-gray-200');
                 toggleSpan.classList.remove('translate-x-5', 'bg-white');
                 toggleSpan.classList.add('bg-gray-200');
-                body.style.backgroundImage = 'url("https://placehold.co/1920x1080/2a2a2a/fff?text=Tawsif+Chatbot")';
+                body.style.backgroundImage = 'url("https://placehold.co/1920x1080/2a2a2a/fff?text=Study+Chatbot")';
             }
         });
 
@@ -298,7 +352,6 @@
             sidebarMenu.classList.add('-translate-x-full');
         });
         
-        // Add event listeners to the new buttons for navigation
         pdfAnalyserBtn.addEventListener('click', () => {
             window.location.href = pdfAnalyserBtn.dataset.url;
         });
@@ -307,13 +360,29 @@
             window.location.href = picAnalyserBtn.dataset.url;
         });
         
-        // এখন থেকে chatHistory গ্লোবাল থাকবে এবং প্রতিবার রিসেট হবে না।
+        // Family information stored in an object for easy lookup
+        // Added the new names as requested by the user.
+        const familyInfo = {
+            'puspo': 'তাওসীফের মা',
+            'nigar': 'তাওসীফের মা',
+            'tafazzal': 'তাওসীফের আব্বু',
+            'sabuj': 'তাওসীফের আব্বু',
+            'muaz': 'তাওসীফের ছোট্ট মামাতো ভাই',
+            'jarif': 'তাওসীফের ছোট মামাতো ভাই',
+            'munjir': 'তাওসীফের সবচেয়ে ছোট মামাতো ভাই',
+            'trisha': 'তাওসীফের বোন',
+            'rayhan': 'তাওসীফের দুলাভাই',
+            'rekha': 'তাওসীফের নানু',
+            'reja': 'তাওসীফের নানা',
+        };
+        
         let chatHistory = [{
             role: "model",
-            parts: [{ text: "আমি তাওসিফ চ্যাটবট, আমি কিভাবে তোমাকে সাহায্য করতে পারি?" }]
+            parts: [{ text: "আমি স্টাডি চ্যাটবট, আমি কিভাবে তোমাকে সাহায্য করতে পারি?" }]
         }];
         
-        const apiKey = "AIzaSyBr5pug_OpHcoVccs0e6_tZB7GQPNVBf-E";
+        // Removed hardcoded API key
+        const apiKey = "AIzaSyBr5pug_OpHcoVccs0e6_tZB7GQPNVBf-E"; 
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -364,76 +433,100 @@
             userInput.placeholder = placeholders[selectedLanguage];
             startSpeechRecognition();
         });
+        
+        // Event listener for the "Ask Chatbot" button
+        askChatbotBtn.addEventListener('click', () => {
+            const selectedText = window.getSelection().toString().trim();
+            if (selectedText) {
+                userInput.value = selectedText;
+                chatForm.dispatchEvent(new Event('submit'));
+                selectionToolbar.classList.add('hidden');
+            }
+        });
+        
+        // Event listener to show the toolbar when text is selected
+        chatMessages.addEventListener('mouseup', (e) => {
+            const selection = window.getSelection();
+            const selectedText = selection.toString().trim();
 
-        function displayMessage(message, sender) {
+            // Check if text is selected and if the selection is inside a model message
+            if (selectedText && e.target.closest('.justify-start')) {
+                const range = selection.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+
+                // Position the toolbar
+                selectionToolbar.style.top = `${rect.top + window.scrollY - selectionToolbar.offsetHeight - 10}px`;
+                selectionToolbar.style.left = `${rect.left + window.scrollX + (rect.width / 2) - (selectionToolbar.offsetWidth / 2)}px`;
+                selectionToolbar.classList.remove('hidden');
+            } else {
+                selectionToolbar.classList.add('hidden');
+            }
+        });
+
+        // Event listener to hide the toolbar when a new selection is not made or click outside
+        document.addEventListener('mousedown', (e) => {
+            if (!selectionToolbar.contains(e.target)) {
+                 selectionToolbar.classList.add('hidden');
+            }
+        });
+
+
+        // Function to display a message with Markdown parsing
+        async function displayMessage(message, sender) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `flex gap-2.5 ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
-            messageDiv.innerHTML = `
-                <div class="flex flex-col w-full max-w-[320px] leading-1.5 p-4 ${sender === 'user' ? 'bg-indigo-600 rounded-e-xl rounded-es-xl' : 'bg-gray-100 rounded-e-xl rounded-es-xl'}">
-                    <p class="text-sm font-normal ${sender === 'user' ? 'text-white' : 'text-gray-900'}">${message}</p>
-                </div>
-            `;
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
 
-        function displayHtmlMessage(htmlContent, sender) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `flex gap-2.5 ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
             const messageContentDiv = document.createElement('div');
-            messageContentDiv.className = `flex flex-col w-full max-w-[320px] leading-1.5 p-4 ${sender === 'user' ? 'bg-indigo-600 rounded-e-xl rounded-es-xl' : 'bg-gray-100 rounded-e-xl rounded-es-xl'}`;
-            messageContentDiv.innerHTML = htmlContent;
-            messageDiv.appendChild(messageContentDiv);
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
+            messageContentDiv.className = `flex flex-col w-full max-w-[320px] leading-1.5 p-4 ${sender === 'user' ? 'bg-indigo-600 rounded-e-xl rounded-es-xl text-white' : 'bg-gray-100 rounded-e-xl rounded-es-xl text-gray-900'} markdown-content`;
 
-        function displayStreamingMessage(message, sender) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `flex gap-2.5 ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
-            const messageContentDiv = document.createElement('div');
-            messageContentDiv.className = `flex flex-col w-full max-w-[320px] leading-1.5 p-4 ${sender === 'user' ? 'bg-indigo-600 rounded-e-xl rounded-es-xl' : 'bg-gray-100 rounded-e-xl rounded-es-xl'}`;
-            messageDiv.appendChild(messageContentDiv);
-            chatMessages.appendChild(messageDiv);
-            
-            const paragraphs = message.split('\n\n');
-            let paraIndex = 0;
+            if (sender === 'user') {
+                messageContentDiv.innerHTML = `<p class="text-sm font-normal">${message}</p>`;
+                messageDiv.appendChild(messageContentDiv);
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            } else {
+                // For model, first append an empty paragraph
+                const pTag = document.createElement('p');
+                pTag.className = 'text-sm font-normal';
+                messageContentDiv.appendChild(pTag);
+                messageDiv.appendChild(messageContentDiv);
+                chatMessages.appendChild(messageDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
 
-            function typeNextParagraph() {
-                if (paraIndex < paragraphs.length) {
-                    const paragraphText = paragraphs[paraIndex];
-                    
-                    const paragraphElement = document.createElement('p');
-                    let pClasses = `text-sm font-normal mb-2`;
-                    if (isTextColored) {
+                // Now, perform the typewriter effect on the raw text
+                await typewriterEffect(pTag, message);
+                
+                // After typing is complete, parse the Markdown and update the innerHTML
+                const htmlContent = marked.parse(message);
+                messageContentDiv.innerHTML = htmlContent;
+
+                // Apply text colors to each paragraph, list item, and heading if the style is on
+                if (isTextColored) {
+                    const elementsToColor = messageContentDiv.querySelectorAll('p, ul, ol, h1, h2, h3, h4, h5, h6');
+                    elementsToColor.forEach(el => {
                         const randomColor = textColors[Math.floor(Math.random() * textColors.length)];
-                        paragraphElement.style.color = randomColor;
-                    } else {
-                        paragraphElement.style.color = sender === 'user' ? '#fff' : '#111827';
-                    }
-                    paragraphElement.className = pClasses;
-                    messageContentDiv.appendChild(paragraphElement);
-
-                    const words = paragraphText.split(' ');
-                    let wordIndex = 0;
-                    const typingSpeed = 50;
-
-                    function typeNextWord() {
-                        if (wordIndex < words.length) {
-                            paragraphElement.textContent += (wordIndex > 0 ? ' ' : '') + words[wordIndex];
-                            wordIndex++;
-                            chatMessages.scrollTop = chatMessages.scrollHeight;
-                            setTimeout(typeNextWord, typingSpeed);
-                        } else {
-                            paraIndex++;
-                            typeNextParagraph();
-                        }
-                    }
-                    typeNextWord();
+                        el.style.color = randomColor;
+                    });
                 }
             }
             
-            typeNextParagraph();
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function typewriterEffect(element, text, delay = 10) {
+            let i = 0;
+            return new Promise((resolve) => {
+                const interval = setInterval(() => {
+                    if (i < text.length) {
+                        element.textContent += text.charAt(i);
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                        i++;
+                    } else {
+                        clearInterval(interval);
+                        resolve();
+                    }
+                }, delay);
+            });
         }
 
         function displayQuizzes(quizzesData) {
@@ -492,16 +585,41 @@
             const lowerPrompt = userPrompt.toLowerCase();
             const selectedLanguage = languageSelect.value;
             
-            // নতুন: আমরা এখন একটি কপি ব্যবহার করব যাতে আসল chatHistory পরিবর্তন না হয়।
-            const finalContents = JSON.parse(JSON.stringify(chatHistory));
+            // Check for the new "add" command first
+            const addCommandMatch = lowerPrompt.match(/^add:\s*(\S+)\s+is\s+(.*)/i);
+            if (addCommandMatch) {
+                const name = addCommandMatch[1].toLowerCase();
+                const relationship = addCommandMatch[2].trim();
+                familyInfo[name] = relationship;
+                displayMessage(`${name.charAt(0).toUpperCase() + name.slice(1)} সম্পর্কে তোমার দেওয়া তথ্য আমি যোগ করে নিয়েছি।`, 'model');
+                return;
+            }
 
-            const creatorKeywords = ['tawsif', 'তাওসিফ', 'tawsifa', 'tausif', 'towsif', 'তোসিফ', 'তৌসিফ', 'কে বানিয়েছে', 'কে তৈরি করেছে', 'কে তৈরি করছিস', 'তোর নির্মাতা কে', 'who made you', 'who created you', 'তোমার সম্পর্কে'];
+            const finalContents = JSON.parse(JSON.stringify(chatHistory));
+            const lastMessageIndex = finalContents.length - 1;
+
+            const creatorKeywords = ['tawsif', 'তাওসীফ', 'tawsifa', 'tausif', 'towsif', 'কে বানিয়েছে', 'কে তৈরি করেছে', 'কে তৈরি করছিস', 'তোর নির্মাতা কে', 'who made you', 'who created you', 'তোমার সম্পর্কে'];
             const quizKeywords = ['mcq', 'quiz', 'question', 'প্রশ্ন', 'কুইজ', 'বহুনির্বাচনি'];
             
             let payload;
-            let lastMessageIndex = finalContents.length - 1;
+            
+            // Check for specific family queries using the dynamic list, now with the new '((name))' format
+            let foundName = null;
+            let foundRelationship = null;
+            for (const name in familyInfo) {
+                const nameRegex = new RegExp(`\\(\\(${name}\\)\\)`, 'i');
+                if (nameRegex.test(lowerPrompt)) {
+                    foundName = name;
+                    foundRelationship = familyInfo[name];
+                    break;
+                }
+            }
 
-            if (quizKeywords.some(keyword => lowerPrompt.includes(keyword))) {
+            if (foundName) {
+                const conversationalPrompt = `${userPrompt}. You know that the person in question is ${foundRelationship}. Use this information to generate a helpful and friendly response in the language of the user's original query.`;
+                finalContents[lastMessageIndex].parts[0].text = conversationalPrompt;
+                payload = { contents: finalContents };
+            } else if (quizKeywords.some(keyword => lowerPrompt.includes(keyword))) {
                 let numQuizzes = 5;
                 const numberWords = {
                     'এক': 1, 'দুই': 2, 'তিন': 3, 'চার': 4, 'পাঁচ': 5,
@@ -522,7 +640,6 @@
                 
                 const quizPrompt = `Generate a JSON object containing an array of exactly ${numQuizzes} quiz questions on the topic "${userPrompt}". Each object in the array should have a "question" string, an "options" array of strings, and a "correctAnswer" string that matches one of the options. Ensure the JSON is well-formed. The questions should be in the user's selected language, which is ${selectedLanguage}.`;
                 
-                // শুধুমাত্র শেষ ব্যবহারকারীর বার্তার প্রম্পট পরিবর্তন করা হলো
                 finalContents[lastMessageIndex].parts[0].text = quizPrompt;
                 
                 const quizSchema = {
@@ -552,16 +669,15 @@
             } else if (creatorKeywords.some(keyword => lowerPrompt.includes(keyword))) {
                 let creatorPrompt;
                 if (selectedLanguage === 'bn-BD') {
-                    creatorPrompt = `${userPrompt}। তুই একজন চ্যাটবট, যাকে **তৌসিফ** তৈরি করেছে। তোর উত্তর বাংলাতে হবে, বন্ধুত্বপূর্ণ হবে এবং ইমোজি ব্যবহার করবে। তোর উত্তরে অবশ্যই **তৌসিফ** নামটি থাকবে।`;
+                    creatorPrompt = `${userPrompt}। তুই একজন চ্যাটবট, যাকে **তাওসীফ** তৈরি করেছে। তোর উত্তর বাংলাতে হবে, বন্ধুত্বপূর্ণ হবে এবং ইমোজি ব্যবহার করবে। তোর উত্তরে অবশ্যই **তাওসীফ** নামটি থাকবে।`;
                 } else if (selectedLanguage === 'en-US') {
                     creatorPrompt = `${userPrompt}. You are a chatbot created by **Tawsif**. Your answer should be in English, friendly, and use emojis. You must include the name **Tawsif** in your response.`;
                 } else if (selectedLanguage === 'hi-IN') {
                     creatorPrompt = `${userPrompt}। आप एक चैटबॉट हैं जिसे **तौसीफ** ने बनाया है। आपका जवाब हिंदी में, दोस्ताना और इमोजी का उपयोग करके होना चाहिए। आपके जवाब में **तौसीफ** नाम शामिल होना चाहिए।`;
                 } else if (selectedLanguage === 'es-ES') {
-                    creatorPrompt = `${userPrompt}. Eres un chatbot creado por **Tawsif**. Tu respuesta debe ser en español, amigable y usar emojis. Debes incluir el nombre **Tawsif** en tu respuesta.`;
+                    creatorPrompt = `${userPrompt}. Eres un chatbot creado por **Tawsif**. Tu respuesta debe ser en español, amigable y usar emojis. Debes incluir el nombre **Tawsif** en tu respuesta।`;
                 }
                 
-                // শুধুমাত্র শেষ ব্যবহারকারীর বার্তার প্রম্পট পরিবর্তন করা হলো
                 finalContents[lastMessageIndex].parts[0].text = creatorPrompt;
                 
                 payload = {
@@ -569,11 +685,10 @@
                 };
 
             } else {
-                // অন্য সব সাধারণ প্রশ্নের জন্য, পুরো chatHistory ব্যবহার করা হবে
-                const languageInstruction = selectedLanguage === 'bn-BD' ? `তুই একটি বাংলা চ্যাটবট। তোর উত্তর বাংলাতে হবে।`
-                                            : selectedLanguage === 'en-US' ? `You are a chatbot. Your response must be in English.`
-                                            : selectedLanguage === 'hi-IN' ? `आप एक चैटबॉट हैं। आपका जवाब हिंदी में होना चाहिए।`
-                                            : selectedLanguage === 'es-ES' ? `Eres un chatbot. Tu respuesta debe ser en español.`
+                const languageInstruction = selectedLanguage === 'bn-BD' ? `তুই একটি বাংলা স্টাডি চ্যাটবট। তোর উত্তর বাংলাতে হবে এবং শিক্ষামূলক বিষয়গুলিতে মনোযোগী হবে। উত্তরগুলো মার্জিত এবং সহজবোধ্য হতে হবে। তুমি একজন চমৎকার শিক্ষার্থী, তাই তোমার প্রশ্নের উত্তর দেওয়ার সময় তোমার প্রশংসা করবে।`
+                                            : selectedLanguage === 'en-US' ? `You are a Study Chatbot. Your response must be in English and focused on educational topics. The answers should be elegant and easy to understand. You are a great student, so praise you while answering your questions.`
+                                            : selectedLanguage === 'hi-IN' ? `आप एक स्टडी चैटबॉट हैं। आपका जवाब हिंदी में, शैक्षिक विषयों पर केंद्रित और सुगम होना चाहिए। आप एक अद्भुत छात्र हैं, इसलिए आपके सवालों का जवाब देते समय आपकी प्रशंसा करें।`
+                                            : selectedLanguage === 'es-ES' ? `Eres un chatbot de estudio. Tu respuesta debe ser en español, enfocada en temas educativos y elegante. Eres un estudiante fantástico, así que elógialo al responder sus preguntas।`
                                             : ``;
                                             
                 finalContents[lastMessageIndex].parts[0].text = `${userPrompt}. ${languageInstruction}`;
@@ -598,71 +713,56 @@
                     });
                     
                     if (response.status === 429) {
-                        const delay = Math.pow(2, retryCount) * 1000;
+                        const delay = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
+                        console.warn(`Rate limit exceeded. Retrying in ${delay / 1000}s...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
                         retryCount++;
-                        await new Promise(res => setTimeout(res, delay));
                         continue;
                     }
-                    
+
                     if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                        throw new Error(`API error: ${response.statusText}`);
                     }
                     
+                    const result = await response.json();
+                    
+                    if (payload.generationConfig && payload.generationConfig.responseMimeType === 'application/json') {
+                        const jsonText = result.candidates[0].content.parts[0].text;
+                        const parsedData = JSON.parse(jsonText);
+                        displayQuizzes(parsedData);
+                    } else {
+                        const text = result.candidates[0].content.parts[0].text;
+                        displayMessage(text, 'model');
+                    }
+                    
+                    chatHistory.push({ role: 'model', parts: [{ text: result.candidates[0].content.parts[0].text }] });
+
                     break;
-                    
+
                 } catch (error) {
-                    console.error('Fetch error:', error);
-                    if (retryCount >= maxRetries - 1) {
-                        throw error;
-                    }
-                    const delay = Math.pow(2, retryCount) * 1000;
-                    retryCount++;
-                    await new Promise(res => setTimeout(res, delay));
+                    console.error('Error fetching from Gemini API:', error);
+                    loadingSpinner.classList.add('hidden');
+                    displayMessage('Sorry, something went wrong. Please try again.', 'model');
+                    break;
                 }
             }
-
-            const result = await response.json();
-            
-            if (result.candidates && result.candidates.length > 0 &&
-                result.candidates[0].content && result.candidates[0].content.parts &&
-                result.candidates[0].content.parts.length > 0) {
-                
-                const responseText = result.candidates[0].content.parts[0].text;
-                
-                if (quizKeywords.some(keyword => lowerPrompt.includes(keyword))) {
-                    try {
-                        const quizzes = JSON.parse(responseText);
-                        displayQuizzes(quizzes);
-                        chatHistory.push({ role: "model", parts: [{ text: "Here are some quizzes for you!" }] });
-                    } catch (e) {
-                        console.error("Failed to parse JSON response:", e);
-                        displayStreamingMessage("দুঃখিত, কুইজ জেনারেট করা যায়নি।", "model");
-                        chatHistory.push({ role: "model", parts: [{ text: "Sorry, I couldn't generate the quizzes." }] });
-                    }
-                } else {
-                    displayStreamingMessage(responseText, 'model');
-                    chatHistory.push({ role: "model", parts: [{ text: responseText }] });
-                }
-
-            } else {
-                displayStreamingMessage("দুঃখিত, আমি এই মুহূর্তে উত্তর দিতে পারছি না।", "model");
-                chatHistory.push({ role: "model", parts: [{ text: "Sorry, I can't answer at the moment." }] });
-            }
-            loadingSpinner.classList.add('hidden');
         }
+        
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userMessage = userInput.value.trim();
+            if (userMessage === '') return;
 
-        chatForm.addEventListener('submit', function(event) {
-            event.preventDefault();
-            const message = userInput.value.trim();
-            if (message) {
-                displayMessage(message, 'user');
-                chatHistory.push({ role: "user", parts: [{ text: message }] });
-                userInput.value = '';
-                loadingSpinner.classList.remove('hidden');
-                getGeminiResponse();
-            }
+            displayMessage(userMessage, 'user');
+            chatHistory.push({ role: 'user', parts: [{ text: userMessage }] });
+
+            userInput.value = '';
+            loadingSpinner.classList.remove('hidden');
+
+            await getGeminiResponse();
+            
+            loadingSpinner.classList.add('hidden');
         });
-
     </script>
 </body>
 </html>
